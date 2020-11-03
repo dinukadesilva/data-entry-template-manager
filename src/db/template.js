@@ -17,13 +17,14 @@ export async function createTemplate(templateJson) {
 
     templateJson.dataModels.map(async (dataModel) => {
         const {name, columns} = dataModel;
-        await asyncMysqlQuery(`
+        const templateDataModel = await asyncMysqlQuery(`
             INSERT INTO templateDataModel (templateId, dataModelName) VALUES ('${templateId}', '${name}');
         `);
+        const templateDataModelId = templateDataModel.insertId;
         const templateDataModelTableNameSuffix = name.replace(/ /g, "_").toLowerCase();
 
         await asyncMysqlQuery(_getSqlTable(
-            `templateDataModel_${templateId}_${templateDataModelTableNameSuffix}`, dataModel.columns
+            `templateDataModel_${templateId}_${templateDataModelId}`, dataModel.columns
         ));
     });
 }
@@ -50,6 +51,33 @@ export async function getTemplate(templateId) {
                 });
             }
         }
+
+        template.dataModels = await asyncMysqlQuery(`SELECT * FROM templateDataModel WHERE templateId = ${templateId}`);
+
+        for (let i = 0; i < template.dataModels.length; i++) {
+            const templateDataModel = template.dataModels[i];
+            templateDataModel.columns = [];
+            const {templateDataModelId} = templateDataModel;
+            const templateDataModelColumns = await asyncMysqlQuery(`
+                SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
+                FROM INFORMATION_SCHEMA.COLUMNS 
+                WHERE TABLE_SCHEMA = '${process.env.DB_NAME}' 
+                    AND TABLE_NAME = 'templateDataModel_${template.templateId}_${templateDataModelId}'
+            `);
+
+            for (let j = 0; j < templateDataModelColumns.length; j++) {
+                const {COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY} = templateDataModelColumns[j];
+                if (["templateId", "templateInstanceId"].indexOf(COLUMN_NAME) < 0) {
+                    templateDataModel.columns.push({
+                        name: COLUMN_NAME,
+                        type: DATA_TYPE,
+                        value: COLUMN_DEFAULT,
+                        key: COLUMN_KEY === "PRI"
+                    });
+                }
+            }
+        }
+
     } else {
         template = null;
     }
