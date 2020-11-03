@@ -3,10 +3,10 @@ import {asyncMysqlQuery} from "./util.js";
 const COLUMN_DATA_TYPE = {
     "int": "INT",
     "decimal": "DECIMAL",
-    "string": "VARCHAR(100)"
+    "varchar": "VARCHAR(100)"
 };
 
-export async function create(templateJson) {
+export async function createTemplate(templateJson) {
     const template = await asyncMysqlQuery(`
         INSERT INTO template (templateName) VALUES ('${templateJson.name}');
     `);
@@ -28,8 +28,37 @@ export async function create(templateJson) {
     });
 }
 
+export async function getTemplate(templateId) {
+    let template = await asyncMysqlQuery(`SELECT * FROM template WHERE templateId = ${templateId}`);
+    if (template.length > 0) {
+        template = template[0];
+        template.columns = [];
+        const templateColumns = await asyncMysqlQuery(`
+            SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
+            FROM INFORMATION_SCHEMA.COLUMNS 
+            WHERE TABLE_SCHEMA = 'data_entry_template_manage' AND TABLE_NAME = 'template_${template.templateId}'
+        `);
+
+        for (let i = 0; i < template.columns.length; i++) {
+            const {COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY} = templateColumns[i];
+            if (["templateId", "templateInstanceId"].indexOf(COLUMN_NAME) < 0) {
+                template.columns.push({
+                    name: COLUMN_NAME,
+                    type: DATA_TYPE,
+                    value: COLUMN_DEFAULT,
+                    key: COLUMN_KEY === "PRI"
+                });
+            }
+        }
+    } else {
+        template = null;
+    }
+
+    return template;
+}
+
 function _getSqlColumn(column) {
-    const {name, type, value, key, index} = column;
+    const {name, type, value, key} = column;
     let defaultValueConstraint = "";
     if (value && [undefined, null, NaN].indexOf(value) < 0) {
         defaultValueConstraint = `DEFAULT '${value}'`;
@@ -41,11 +70,10 @@ function _getSqlColumn(column) {
 function _getSqlTable(tableName, columns) {
     let sqlColumns = "";
     let primaryColumns = "";
-    let indexColumns = "";
 
     for (let i = 0; i < columns.length; i++) {
         const column = columns[i];
-        const {name, key, index} = column;
+        const {name, key} = column;
 
         if (sqlColumns === "") {
             sqlColumns += _getSqlColumn(column);
@@ -60,14 +88,6 @@ function _getSqlTable(tableName, columns) {
                 primaryColumns += `, ${name}`;
             }
         }
-
-        if (index) {
-            if (indexColumns === "") {
-                indexColumns += name;
-            } else {
-                indexColumns += `, ${name}`;
-            }
-        }
     }
 
     return `
@@ -76,7 +96,6 @@ function _getSqlTable(tableName, columns) {
             templateInstanceId INT(6) UNSIGNED  NOT NULL,
             ${sqlColumns},
             PRIMARY KEY (templateId, templateInstanceId, ${primaryColumns}),
-            INDEX (${indexColumns}),
             FOREIGN KEY (templateId) REFERENCES template(templateId),
             FOREIGN KEY (templateInstanceId) REFERENCES templateInstance(templateInstanceId)
         );

@@ -58,7 +58,6 @@ export async function initTables() {
     `);
     console.log('[] -- Created table "template"');
 
-
     await asyncMysqlQuery(`
         CREATE TABLE templateInstance (
             templateInstanceId INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -70,9 +69,10 @@ export async function initTables() {
 
     await asyncMysqlQuery(`
         CREATE TABLE templateDataModel (
+            templateDataModelId INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             templateId INT(6) UNSIGNED  NOT NULL,
             dataModelName VARCHAR(30) NOT NULL,
-            PRIMARY KEY (templateId, dataModelName),
+            UNIQUE (templateId, dataModelName),
             FOREIGN KEY (templateId) REFERENCES template(templateId)
         );
     `);
