@@ -21,12 +21,13 @@ export async function createTemplate(templateJson) {
             INSERT INTO templateDataModel (templateId, dataModelName) VALUES ('${templateId}', '${name}');
         `);
         const templateDataModelId = templateDataModel.insertId;
-        const templateDataModelTableNameSuffix = name.replace(/ /g, "_").toLowerCase();
 
         await asyncMysqlQuery(_getSqlTable(
-            `templateDataModel_${templateId}_${templateDataModelId}`, dataModel.columns
+            `template_${templateId}_dataModel_${templateDataModelId}`, columns
         ));
     });
+
+    return {templateId};
 }
 
 export async function getTemplate(templateId) {
@@ -62,7 +63,7 @@ export async function getTemplate(templateId) {
                     SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
                     FROM INFORMATION_SCHEMA.COLUMNS 
                     WHERE TABLE_SCHEMA = '${process.env.DB_NAME}' 
-                        AND TABLE_NAME = 'templateDataModel_${template.templateId}_${templateDataModelId}'
+                        AND TABLE_NAME = 'template_${template.templateId}_dataModel_${templateDataModelId}'
                 `);
 
                 for (let j = 0; j < templateDataModelColumns.length; j++) {

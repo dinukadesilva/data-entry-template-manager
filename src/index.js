@@ -50,9 +50,9 @@ app.get('/template', async (req, res) => {
         ]
     };
 
-    await createTemplate(templateJson);
+    let template = await createTemplate(templateJson);
 
-    res.send('Created Template');
+    res.json(template);
 });
 
 app.get('/templateInstance', async (req, res) => {
