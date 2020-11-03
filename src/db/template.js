@@ -54,30 +54,32 @@ export async function getTemplate(templateId) {
 
         template.dataModels = await asyncMysqlQuery(`SELECT * FROM templateDataModel WHERE templateId = ${templateId}`);
 
-        for (let i = 0; i < template.dataModels.length; i++) {
-            const templateDataModel = template.dataModels[i];
-            templateDataModel.columns = [];
-            const {templateDataModelId} = templateDataModel;
-            const templateDataModelColumns = await asyncMysqlQuery(`
-                SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
-                FROM INFORMATION_SCHEMA.COLUMNS 
-                WHERE TABLE_SCHEMA = '${process.env.DB_NAME}' 
-                    AND TABLE_NAME = 'templateDataModel_${template.templateId}_${templateDataModelId}'
-            `);
+        await Promise.all(template.dataModels.map((templateDataModel) => {
+            return new Promise(async (resolve) => {
+                templateDataModel.columns = [];
+                const {templateDataModelId} = templateDataModel;
+                const templateDataModelColumns = await asyncMysqlQuery(`
+                    SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
+                    FROM INFORMATION_SCHEMA.COLUMNS 
+                    WHERE TABLE_SCHEMA = '${process.env.DB_NAME}' 
+                        AND TABLE_NAME = 'templateDataModel_${template.templateId}_${templateDataModelId}'
+                `);
 
-            for (let j = 0; j < templateDataModelColumns.length; j++) {
-                const {COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY} = templateDataModelColumns[j];
-                if (["templateId", "templateInstanceId"].indexOf(COLUMN_NAME) < 0) {
-                    templateDataModel.columns.push({
-                        name: COLUMN_NAME,
-                        type: DATA_TYPE,
-                        value: COLUMN_DEFAULT,
-                        key: COLUMN_KEY === "PRI"
-                    });
+                for (let j = 0; j < templateDataModelColumns.length; j++) {
+                    const {COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY} = templateDataModelColumns[j];
+                    if (["templateId", "templateInstanceId"].indexOf(COLUMN_NAME) < 0) {
+                        templateDataModel.columns.push({
+                            name: COLUMN_NAME,
+                            type: DATA_TYPE,
+                            value: COLUMN_DEFAULT,
+                            key: COLUMN_KEY === "PRI"
+                        });
+                    }
                 }
-            }
-        }
 
+                resolve();
+            });
+        }));
     } else {
         template = null;
     }
