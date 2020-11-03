@@ -22,6 +22,9 @@ function getConnection() {
 }
 
 export function asyncMysqlQuery(sql) {
+
+    console.log("######## asyncMysqlQuery ######### \n", sql);
+
     return new Promise((resolve, reject) => {
         const connection = getConnection();
         connection.query(sql, function (error, results) {
@@ -39,6 +42,9 @@ export async function dropTables() {
     await asyncMysqlQuery(`DROP TABLE templateDataModel;`);
     console.log('[] -- Dropped table "templateDataModel"');
 
+    await asyncMysqlQuery(`DROP TABLE templateInstance;`);
+    console.log('[] -- Dropped table "templateInstance"');
+
     await asyncMysqlQuery(`DROP TABLE template;`);
     console.log('[] -- Dropped table "template"');
 }
@@ -51,6 +57,16 @@ export async function initTables() {
         );
     `);
     console.log('[] -- Created table "template"');
+
+
+    await asyncMysqlQuery(`
+        CREATE TABLE templateInstance (
+            templateInstanceId INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            templateId INT(6) UNSIGNED  NOT NULL,
+            FOREIGN KEY (templateId) REFERENCES template(templateId)
+        );
+    `);
+    console.log('[] -- Created table "templateInstance"');
 
     await asyncMysqlQuery(`
         CREATE TABLE templateDataModel (

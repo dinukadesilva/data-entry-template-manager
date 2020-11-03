@@ -72,9 +72,13 @@ function _getSqlTable(tableName, columns) {
 
     return `
         CREATE TABLE ${tableName} (
+            templateId INT(6) UNSIGNED  NOT NULL,
+            templateInstanceId INT(6) UNSIGNED  NOT NULL,
             ${sqlColumns},
-            PRIMARY KEY (${primaryColumns}),
-            INDEX (${indexColumns})
+            PRIMARY KEY (templateId, templateInstanceId, ${primaryColumns}),
+            INDEX (${indexColumns}),
+            FOREIGN KEY (templateId) REFERENCES template(templateId),
+            FOREIGN KEY (templateInstanceId) REFERENCES templateInstance(templateInstanceId)
         );
     `;
 }
