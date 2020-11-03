@@ -36,10 +36,10 @@ export async function getTemplate(templateId) {
         const templateColumns = await asyncMysqlQuery(`
             SELECT COLUMN_NAME,COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY 
             FROM INFORMATION_SCHEMA.COLUMNS 
-            WHERE TABLE_SCHEMA = 'data_entry_template_manage' AND TABLE_NAME = 'template_${template.templateId}'
+            WHERE TABLE_SCHEMA = '${process.env.DB_NAME}' AND TABLE_NAME = 'template_${template.templateId}'
         `);
 
-        for (let i = 0; i < template.columns.length; i++) {
+        for (let i = 0; i < templateColumns.length; i++) {
             const {COLUMN_NAME, COLUMN_DEFAULT, DATA_TYPE, COLUMN_KEY} = templateColumns[i];
             if (["templateId", "templateInstanceId"].indexOf(COLUMN_NAME) < 0) {
                 template.columns.push({

@@ -1,7 +1,9 @@
-import express from "express"
+import dotenv from "dotenv";
+import express from "express";
 import {dropTables, initTables} from "./db/util.js";
 import {createTemplate, getTemplate} from "./db/template.js";
 
+dotenv.config();
 const app = express();
 const port = 3005;
 
