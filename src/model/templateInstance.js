@@ -7,7 +7,7 @@ export async function create(templateJson) {
     //     INSERT INTO template (templateName) VALUES ('${templateJson.name}');
     // `);
     // const templateId = template.insertId;
-    // console.log('[] -- Created template ', template);
+    // logger.log('[] -- Created template ', template);
     //
     // await asyncMysqlQuery(_getSqlTable(`template_${templateId}`, templateJson.columns));
     //

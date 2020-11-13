@@ -1,7 +1,8 @@
 import dotenv from "dotenv";
 import express from "express";
-import {dropTables, initTables} from "./db/util.js";
-import {createTemplate, getTemplate} from "./db/template.js";
+import {dropTables, initTables} from "./model/util.js";
+import {createTemplate, getTemplate} from "./model/template.js";
+import logger from "./logger.js";
 
 dotenv.config();
 const app = express();
@@ -26,7 +27,7 @@ app.get('/template/:templateId', async (req, res) => {
     res.json(template);
 });
 
-app.get('/template', async (req, res) => {
+app.post('/template', async (req, res) => {
     const templateJson = {
         name: "template 1",
         columns: [
@@ -100,5 +101,7 @@ app.get('/templateInstance', async (req, res) => {
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`)
+    logger.log(`Example app listening at http://localhost:${port}`)
 });
+
+export default app; // for testing

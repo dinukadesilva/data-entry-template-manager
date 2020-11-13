@@ -1,4 +1,5 @@
 import mysql from "mysql";
+import logger from "../logger.js";
 
 function getConnection() {
     const connection = mysql.createConnection({
@@ -11,11 +12,11 @@ function getConnection() {
 
     connection.connect(function (err) {
         if (err) {
-            console.error('error connecting: ' + err.stack);
+            logger.error('error connecting: ' + err.stack);
             return;
         }
 
-        console.log('connected as id ' + connection.threadId);
+        logger.log('connected as id ' + connection.threadId);
     });
 
     return connection;
@@ -23,7 +24,7 @@ function getConnection() {
 
 export function asyncMysqlQuery(sql) {
 
-    console.log("######## asyncMysqlQuery ######### \n", sql);
+    logger.log("######## asyncMysqlQuery ######### \n", sql);
 
     return new Promise((resolve, reject) => {
         const connection = getConnection();
@@ -40,13 +41,13 @@ export function asyncMysqlQuery(sql) {
 
 export async function dropTables() {
     await asyncMysqlQuery(`DROP TABLE templateDataModel;`);
-    console.log('[] -- Dropped table "templateDataModel"');
+    logger.log('[] -- Dropped table "templateDataModel"');
 
     await asyncMysqlQuery(`DROP TABLE templateInstance;`);
-    console.log('[] -- Dropped table "templateInstance"');
+    logger.log('[] -- Dropped table "templateInstance"');
 
     await asyncMysqlQuery(`DROP TABLE template;`);
-    console.log('[] -- Dropped table "template"');
+    logger.log('[] -- Dropped table "template"');
 }
 
 export async function initTables() {
@@ -56,7 +57,7 @@ export async function initTables() {
             templateName VARCHAR(30) NOT NULL
         );
     `);
-    console.log('[] -- Created table "template"');
+    logger.log('[] -- Created table "template"');
 
     await asyncMysqlQuery(`
         CREATE TABLE templateInstance (
@@ -65,7 +66,7 @@ export async function initTables() {
             FOREIGN KEY (templateId) REFERENCES template(templateId)
         );
     `);
-    console.log('[] -- Created table "templateInstance"');
+    logger.log('[] -- Created table "templateInstance"');
 
     await asyncMysqlQuery(`
         CREATE TABLE templateDataModel (
@@ -76,7 +77,7 @@ export async function initTables() {
             FOREIGN KEY (templateId) REFERENCES template(templateId)
         );
     `);
-    console.log('[] -- Created table "templateDataModel"');
+    logger.log('[] -- Created table "templateDataModel"');
 }
 
 

@@ -1,4 +1,5 @@
 import {asyncMysqlQuery} from "./util.js";
+import logger from "../logger.js";
 
 const COLUMN_DATA_TYPE = {
     "int": "INT",
@@ -11,7 +12,7 @@ export async function createTemplate(templateJson) {
         INSERT INTO template (templateName) VALUES ('${templateJson.name}');
     `);
     const templateId = template.insertId;
-    console.log('[] -- Created template ', template);
+    logger.log('[] -- Created template ', template);
 
     await asyncMysqlQuery(_getSqlTable(`template_${templateId}`, templateJson.columns));
 
