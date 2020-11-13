@@ -14,9 +14,24 @@ export async function createTemplate(templateJson) {
     const templateId = template.insertId;
     logger.log('[] -- Created template ', template);
 
-    await asyncMysqlQuery(_getSqlTable(`template_${templateId}`, templateJson.columns));
+    const columns = [];
+    const dataModels = []
 
-    templateJson.dataModels.map(async (dataModel) => {
+    for (let dataKey in templateJson.data) {
+        const dataItem = templateJson.data[dataKey];
+
+        // Filter the column type data and exclude the data models.
+        if (dataItem.type && typeof dataItem.type === "string") {
+            dataItem.name = dataKey;
+            columns.push(dataItem);
+        } else {
+            dataModels.push({name: dataKey, columns: dataItem});
+        }
+    }
+
+    await asyncMysqlQuery(_getSqlTable(`template_${templateId}`, columns));
+
+    dataModels.map(async (dataModel) => {
         const {name, columns} = dataModel;
         const templateDataModel = await asyncMysqlQuery(`
             INSERT INTO templateDataModel (templateId, dataModelName) VALUES ('${templateId}', '${name}');

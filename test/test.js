@@ -20,25 +20,20 @@ describe('template', () => {
                 .set('content-type', 'application/json')
                 .send({
                     name: "template 1",
-                    columns: [
-                        {name: "countryId", type: "int", key: true},
-                        {name: "electoralDistrictId", type: "int", key: true},
-                        {name: "pollingDivisionId", type: "int", key: true},
-                        {name: "countingCentreId", type: "int", key: true},
-                        {name: "rejectedVoteCount", type: "decimal", value: 0, key: false},
-                        {name: "rejectedVoteCountInWords", type: "varchar", value: "", key: false}
-                    ],
-                    dataModels: [
-                        {
-                            name: "Party wise vote counts",
-                            columns: [
-                                {name: "partyId", type: "int", key: true},
-                                {name: "partyName", type: "varchar", value: "", key: false},
-                                {name: "voteCount", type: "decimal", value: 0, key: false},
-                                {name: "voteCountInWords", type: "varchar", value: "", key: false}
-                            ]
+                    data: {
+                        "countryId": {type: "int", key: true},
+                        "electoralDistrictId": {type: "int", key: true},
+                        "pollingDivisionId": {type: "int", key: true},
+                        "countingCentreId": {type: "int", key: true},
+                        "rejectedVoteCount": {type: "decimal", value: 0, key: false},
+                        "rejectedVoteCountInWords": {type: "varchar", value: "", key: false},
+                        "party_wise_vote_counts": {
+                            "partyId": {type: "int", key: true},
+                            "partyName": {type: "varchar", value: "", key: false},
+                            "voteCount": {type: "decimal", value: 0, key: false},
+                            "voteCountInWords": {type: "varchar", value: "", key: false}
                         }
-                    ]
+                    }
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -53,25 +48,20 @@ describe('template', () => {
                 .set('content-type', 'application/json')
                 .send({
                     name: "template 1",
-                    columns: [
-                        {name: "countryId", type: "int", key: true},
-                        {name: "electoralDistrictId", type: "int", key: true},
-                        {name: "pollingDivisionId", type: "int", key: true},
-                        {name: "countingCentreId", type: "int", key: true},
-                        {name: "rejectedVoteCount", type: "decimal", value: 0, key: false},
-                        {name: "rejectedVoteCountInWords", type: "varchar", value: "", key: false}
-                    ],
-                    dataModels: [
-                        {
-                            name: "Party wise vote counts",
-                            columns: [
-                                {name: "partyId", type: "int", key: true},
-                                {name: "partyName", type: "varchar", value: "", key: false},
-                                {name: "voteCount", type: "decimal", value: 0, key: false},
-                                {name: "voteCountInWords", type: "varchar", value: "", key: false}
-                            ]
+                    data: {
+                        "countryId": {type: "int", key: true},
+                        "electoralDistrictId": {type: "int", key: true},
+                        "pollingDivisionId": {type: "int", key: true},
+                        "countingCentreId": {type: "int", key: true},
+                        "rejectedVoteCount": {type: "decimal", value: 0, key: false},
+                        "rejectedVoteCountInWords": {type: "varchar", value: "", key: false},
+                        "party_wise_vote_counts": {
+                            "partyId": {type: "int", key: true},
+                            "partyName": {type: "varchar", value: "", key: false},
+                            "voteCount": {type: "decimal", value: 0, key: false},
+                            "voteCountInWords": {type: "varchar", value: "", key: false}
                         }
-                    ]
+                    }
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
@@ -98,25 +88,20 @@ describe('template', () => {
                 .set('content-type', 'application/json')
                 .send({
                     name: "template 1",
-                    columns: [
-                        {name: "countryId", type: "int", key: true},
-                        {name: "electoralDistrictId", type: "int", key: true},
-                        {name: "pollingDivisionId", type: "int", key: true},
-                        {name: "countingCentreId", type: "int", key: true},
-                        {name: "rejectedVoteCount", type: "decimal", value: 0, key: false},
-                        {name: "rejectedVoteCountInWords", type: "varchar", value: "", key: false}
-                    ],
-                    dataModels: [
-                        {
-                            name: "Party wise vote counts",
-                            columns: [
-                                {name: "partyId", type: "int", key: true},
-                                {name: "partyName", type: "varchar", value: "", key: false},
-                                {name: "voteCount", type: "decimal", value: 0, key: false},
-                                {name: "voteCountInWords", type: "varchar", value: "", key: false}
-                            ]
+                    data: {
+                        "countryId": {type: "int", key: true},
+                        "electoralDistrictId": {type: "int", key: true},
+                        "pollingDivisionId": {type: "int", key: true},
+                        "countingCentreId": {type: "int", key: true},
+                        "rejectedVoteCount": {type: "decimal", value: 0, key: false},
+                        "rejectedVoteCountInWords": {type: "varchar", value: "", key: false},
+                        "party_wise_vote_counts": {
+                            "partyId": {type: "int", key: true},
+                            "partyName": {type: "varchar", value: "", key: false},
+                            "voteCount": {type: "decimal", value: 0, key: false},
+                            "voteCountInWords": {type: "varchar", value: "", key: false}
                         }
-                    ]
+                    }
                 })
                 .end((err, res) => {
                     res.should.have.status(200);
