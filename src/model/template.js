@@ -123,7 +123,7 @@ async function createTable(tableName, columns) {
     }
 
     let sqlColumns = "";
-    let primaryColumns = "";
+    let primaryColumns = ["templateId", "templateInstanceId"];
 
     for (let i = 0; i < columns.length; i++) {
         const column = columns[i];
@@ -136,11 +136,7 @@ async function createTable(tableName, columns) {
         }
 
         if (key) {
-            if (primaryColumns === "") {
-                primaryColumns += name;
-            } else {
-                primaryColumns += `, ${name}`;
-            }
+            primaryColumns.push(name);
         }
     }
 
@@ -149,7 +145,7 @@ async function createTable(tableName, columns) {
             templateId INT(6) UNSIGNED  NOT NULL,
             templateInstanceId INT(6) UNSIGNED  NOT NULL,
             ${sqlColumns},
-            PRIMARY KEY (templateId, templateInstanceId, ${primaryColumns}),
+            PRIMARY KEY (${primaryColumns.join(",")}),
             FOREIGN KEY (templateId) REFERENCES template(templateId),
             FOREIGN KEY (templateInstanceId) REFERENCES templateInstance(templateInstanceId)
         );
@@ -157,12 +153,50 @@ async function createTable(tableName, columns) {
 
     await asyncMysqlQuery(`
         CREATE TABLE history_${tableName} LIKE ${tableName};
-    `)
+    `);
 
     await asyncMysqlQuery(`
         ALTER TABLE history_${tableName}
            DROP PRIMARY KEY,
            ADD COLUMN startDate DATETIME,
            ADD COLUMN endDate DATETIME;
-    `)
+    `);
+
+    await asyncMysqlQuery(`
+        CREATE TRIGGER ${tableName}_on_insert AFTER INSERT ON ${tableName}
+        FOR EACH ROW
+        BEGIN
+            INSERT INTO history_${tableName} (
+                SELECT *, NOW(), NULL FROM ${tableName}
+                WHERE ${primaryColumns.map(primaryColumn => `${primaryColumn} = NEW.${primaryColumn}`).join(" AND ")}
+            );
+        END
+    `);
+
+
+    await asyncMysqlQuery(`
+        CREATE TRIGGER ${tableName}_on_update AFTER UPDATE ON ${tableName}
+        FOR EACH ROW
+        BEGIN
+            UPDATE history_${tableName} SET endDate = NOW()
+            WHERE
+                ${primaryColumns.map(primaryColumn => `${primaryColumn} = OLD.${primaryColumn}`).join(" AND ")}
+                AND endDate IS NULL;
+            INSERT INTO history_${tableName} (
+                SELECT *, NOW(), NULL FROM ${tableName}
+                WHERE ${primaryColumns.map(primaryColumn => `${primaryColumn} = NEW.${primaryColumn}`).join(" AND ")}
+            );
+        END
+    `);
+
+    await asyncMysqlQuery(`
+        CREATE TRIGGER ${tableName}_on_delete AFTER DELETE ON ${tableName}
+        FOR EACH ROW
+        BEGIN
+            UPDATE history_${tableName} SET endDate = NOW() 
+            WHERE 
+                ${primaryColumns.map(primaryColumn => `${primaryColumn} = OLD.${primaryColumn}`).join(" AND ")} 
+                AND endDate IS NULL;
+        END
+    `);
 }
