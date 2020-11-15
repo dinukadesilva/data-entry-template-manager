@@ -5,8 +5,8 @@ services:
     environment:
       - MYSQL_ROOT_PASSWORD=1234
     volumes:
-      - ./model/init:/docker-entrypoint-initdb.d
-      - ./model/data:/var/lib/mysql
+      - ./db/init:/docker-entrypoint-initdb.d
+      - ./db/data:/var/lib/mysql
     ports:
       - "3306:3306"
     command: [ 'mysqld', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_unicode_ci', '--sql_mode=' ]
