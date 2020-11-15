@@ -29,9 +29,10 @@ export async function createTemplate(templateJson) {
         }
     }
 
-    await asyncMysqlQuery(_getSqlTable(`template_${templateId}`, columns));
+    await createTable(`template_${templateId}`, columns);
 
-    dataModels.map(async (dataModel) => {
+    for (let dataModelIndex in dataModels) {
+        const dataModel = dataModels[dataModelIndex];
         const {name} = dataModel;
         const templateDataModel = await asyncMysqlQuery(`
             INSERT INTO templateDataModel (templateId, dataModelName) VALUES ('${templateId}', '${name}');
@@ -45,10 +46,8 @@ export async function createTemplate(templateJson) {
             dataModelColumns.push(dataModelColumn);
         }
 
-        await asyncMysqlQuery(_getSqlTable(
-            `template_${templateId}_dataModel_${templateDataModelId}`, dataModelColumns
-        ));
-    });
+        await createTable(`template_${templateId}_dataModel_${templateDataModelId}`, dataModelColumns);
+    }
 
     return {templateId};
 }
@@ -111,17 +110,18 @@ export async function getTemplate(templateId) {
     return template;
 }
 
-function _getSqlColumn(column) {
-    const {name, type, value, key} = column;
-    let defaultValueConstraint = "";
-    if (value && [undefined, null, NaN].indexOf(value) < 0) {
-        defaultValueConstraint = `DEFAULT '${value}'`;
+
+async function createTable(tableName, columns) {
+    function _getSqlColumn(column) {
+        const {name, type, value, key} = column;
+        let defaultValueConstraint = "";
+        if (value && [undefined, null, NaN].indexOf(value) < 0) {
+            defaultValueConstraint = `DEFAULT '${value}'`;
+        }
+
+        return `${name} ${COLUMN_DATA_TYPE[type]} ${defaultValueConstraint}`;
     }
 
-    return `${name} ${COLUMN_DATA_TYPE[type]} ${defaultValueConstraint}`;
-}
-
-function _getSqlTable(tableName, columns) {
     let sqlColumns = "";
     let primaryColumns = "";
 
@@ -144,7 +144,7 @@ function _getSqlTable(tableName, columns) {
         }
     }
 
-    return `
+    await asyncMysqlQuery(`
         CREATE TABLE ${tableName} (
             templateId INT(6) UNSIGNED  NOT NULL,
             templateInstanceId INT(6) UNSIGNED  NOT NULL,
@@ -153,5 +153,16 @@ function _getSqlTable(tableName, columns) {
             FOREIGN KEY (templateId) REFERENCES template(templateId),
             FOREIGN KEY (templateInstanceId) REFERENCES templateInstance(templateInstanceId)
         );
-    `;
+    `);
+
+    await asyncMysqlQuery(`
+        CREATE TABLE history_${tableName} LIKE ${tableName};
+    `)
+
+    await asyncMysqlQuery(`
+        ALTER TABLE history_${tableName}
+           DROP PRIMARY KEY,
+           ADD COLUMN startDate DATETIME,
+           ADD COLUMN endDate DATETIME;
+    `)
 }
