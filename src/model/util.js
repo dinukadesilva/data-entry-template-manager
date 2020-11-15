@@ -10,9 +10,9 @@ function getConnection() {
         database: process.env.DB_NAME
     });
 
-    connection.connect(function (err) {
+    connection.connect((err) => {
         if (err) {
-            logger.error('error connecting: ' + err.stack);
+            logger.log('error connecting: ' + err.stack);
             return;
         }
 
