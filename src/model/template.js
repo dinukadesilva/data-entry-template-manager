@@ -142,13 +142,17 @@ async function createTable(tableName, columns) {
 
     await asyncMysqlQuery(`
         CREATE TABLE ${tableName} (
+            templateRowId INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             templateId INT(6) UNSIGNED  NOT NULL,
             templateInstanceId INT(6) UNSIGNED  NOT NULL,
             ${sqlColumns},
-            PRIMARY KEY (${primaryColumns.join(",")}),
             FOREIGN KEY (templateId) REFERENCES template(templateId),
             FOREIGN KEY (templateInstanceId) REFERENCES templateInstance(templateInstanceId)
         );
+    `);
+
+    await asyncMysqlQuery(`
+        CREATE UNIQUE INDEX ${tableName}_uk ON ${tableName} (${primaryColumns.join(",")})
     `);
 
     await asyncMysqlQuery(`
@@ -157,9 +161,11 @@ async function createTable(tableName, columns) {
 
     await asyncMysqlQuery(`
         ALTER TABLE history_${tableName}
-           DROP PRIMARY KEY,
-           ADD COLUMN startDate DATETIME,
-           ADD COLUMN endDate DATETIME;
+            MODIFY COLUMN templateRowId INT(6),
+            DROP PRIMARY KEY,
+            DROP INDEX ${tableName}_uk,
+            ADD COLUMN startDate DATETIME,
+            ADD COLUMN endDate DATETIME;
     `);
 
     await asyncMysqlQuery(`
@@ -168,11 +174,10 @@ async function createTable(tableName, columns) {
         BEGIN
             INSERT INTO history_${tableName} (
                 SELECT *, NOW(), NULL FROM ${tableName}
-                WHERE ${primaryColumns.map(primaryColumn => `${primaryColumn} = NEW.${primaryColumn}`).join(" AND ")}
+                WHERE templateRowId = NEW.templateRowId
             );
         END
     `);
-
 
     await asyncMysqlQuery(`
         CREATE TRIGGER ${tableName}_on_update AFTER UPDATE ON ${tableName}
@@ -180,11 +185,11 @@ async function createTable(tableName, columns) {
         BEGIN
             UPDATE history_${tableName} SET endDate = NOW()
             WHERE
-                ${primaryColumns.map(primaryColumn => `${primaryColumn} = OLD.${primaryColumn}`).join(" AND ")}
+                templateRowId = OLD.templateRowId
                 AND endDate IS NULL;
             INSERT INTO history_${tableName} (
                 SELECT *, NOW(), NULL FROM ${tableName}
-                WHERE ${primaryColumns.map(primaryColumn => `${primaryColumn} = NEW.${primaryColumn}`).join(" AND ")}
+                WHERE templateRowId = NEW.templateRowId
             );
         END
     `);
@@ -193,9 +198,9 @@ async function createTable(tableName, columns) {
         CREATE TRIGGER ${tableName}_on_delete AFTER DELETE ON ${tableName}
         FOR EACH ROW
         BEGIN
-            UPDATE history_${tableName} SET endDate = NOW() 
-            WHERE 
-                ${primaryColumns.map(primaryColumn => `${primaryColumn} = OLD.${primaryColumn}`).join(" AND ")} 
+            UPDATE history_${tableName} SET endDate = NOW()
+            WHERE
+                templateRowId = OLD.templateRowId
                 AND endDate IS NULL;
         END
     `);
