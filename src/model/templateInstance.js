@@ -43,15 +43,31 @@ export async function createTemplateInstance(templateInstanceJson) {
     const templateInstanceId = templateInstance.insertId;
     logger.log('[] -- Created template instance ', templateInstance);
 
-    await insertObjectsToTable({templateId, templateInstanceId}, [templateInstanceJson.data],
-        `template_${templateId}`);
-
     const dataModels = await asyncMysqlQuery(`SELECT templateDataModelId, dataModelName FROM templateDataModel WHERE templateId = ${templateId}`);
     for (let i = 0; i < dataModels.length; i++) {
         const dataModel = dataModels[i];
         const {templateDataModelId, dataModelName} = dataModel;
-        await insertObjectsToTable({templateId, templateInstanceId}, templateInstanceJson.data[dataModelName],
-            `template_${templateId}_dataModel_${templateDataModelId}`);
+        let insertObjects = templateInstanceJson;
+        const dataModelPaths = dataModelName.split(".");
+        for (let j = 0; j < dataModelPaths.length && insertObjects; j++) {
+            const dataModelPath = dataModelPaths[j];
+            if (dataModelPath !== "") {
+                if (insertObjects[dataModelPath]) {
+                    insertObjects = insertObjects[dataModelPath];
+                } else {
+                    insertObjects = null;
+                }
+            }
+        }
+
+        if (insertObjects) {
+            if (!Array.isArray(insertObjects)) {
+                insertObjects = [insertObjects];
+            }
+
+            await insertObjectsToTable({templateId, templateInstanceId}, insertObjects,
+                `template_${templateId}_dataModel_${templateDataModelId}`);
+        }
     }
 
     return {templateInstanceId};

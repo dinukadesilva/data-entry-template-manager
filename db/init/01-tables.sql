@@ -18,7 +18,7 @@ CREATE TABLE templateDataModel
 (
     templateDataModelId INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     templateId          INT(6) UNSIGNED NOT NULL,
-    dataModelName       VARCHAR(30)     NOT NULL,
+    dataModelName       VARCHAR(100)    NOT NULL,
     UNIQUE (templateId, dataModelName),
     FOREIGN KEY (templateId) REFERENCES template (templateId)
 );

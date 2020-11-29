@@ -64,6 +64,7 @@ describe('template', () => {
                     }
                 })
                 .end((err, res) => {
+                    expect(err).to.be.null;
                     res.should.have.status(200);
                     res.body.should.be.a('object');
                     expect(res.body.templateId).to.be.a('number')
@@ -72,6 +73,7 @@ describe('template', () => {
                         .get(`/template/${res.body.templateId}`)
                         .set('content-type', 'application/json')
                         .end((err, res) => {
+                            expect(err).to.be.null;
                             res.should.have.status(200);
                             res.body.should.be.a('object');
                             expect(res.body.templateId).to.be.a('number')
